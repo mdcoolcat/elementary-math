@@ -19,13 +19,15 @@ python3 -m http.server 8000    # then http://localhost:8000
 Type what you want in the box and hit **Generate**. Every click produces a fresh
 set of problems from the same description, so click again for the next day's
 practice. The panel echoes back what it understood, so you can see whether the
-parser read you correctly before you print anything.
+parser read you correctly before you print anything — the **What you'll get**
+panel lists each section as `2 pages of 20 problems — Subtraction · 2-digit −
+1-digit · within 20 · side by side`.
 
 | You type | You get |
 | --- | --- |
 | `subtraction within 20` | 1 page, 20 horizontal problems, answers 0–20, never negative |
 | `2-digit addition within 100 without carry` | 2-digit + 2-digit, no column ever carries |
-| `3 digit vertical subtraction` | stacked column format, 5 × 4 to a page |
+| `3 digit vertical subtraction` | stacked column format (`stacked` works too) |
 | `multiplication tables to 12` | both factors 1–12 |
 | `division within 144` | exact division, no remainders |
 | `grade 2` | a preset packet for that grade, via the Kumon level it maps to |
@@ -37,7 +39,7 @@ Phrases the parser understands:
 - **Size** — `2-digit`, `one-digit`, `3 digit minus 1 digit` (first width is the top number, second is the bottom)
 - **Ceiling** — `within 20`, `up to 100`, `under 1000`, `to 12`
 - **Regrouping** — `without carry`, `no borrowing`, `with regrouping`
-- **Layout** — `vertical` / `column` / `stacked`, or `horizontal`
+- **Layout** — `vertical` / `column` / `stacked`, or `horizontal` / `across`
 - **Amount** — `5 pages`, `15 questions`
 
 ### Grade and Kumon level presets

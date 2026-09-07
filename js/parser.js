@@ -306,7 +306,7 @@
     if (s.max != null) bits.push('within ' + s.max);
     if (s.regroup === 'none') bits.push(s.op === 'sub' ? 'no borrowing' : 'no carrying');
     if (s.regroup === 'require') bits.push(s.op === 'sub' ? 'with borrowing' : 'with carrying');
-    bits.push(s.layout);
+    bits.push(s.layout === 'vertical' ? 'stacked' : 'side by side');
     return bits.join(' · ');
   }
 
@@ -394,7 +394,8 @@
       if (shapes.length) {
         sec.shapes = shapes;
         sec.label = 'Mixed ' + OP_LABEL[sec.ops[0]].toLowerCase() +
-          (sec.max != null ? ' · within ' + sec.max : '') + ' · ' + sec.layout;
+          (sec.max != null ? ' · within ' + sec.max : '') +
+          ' · ' + (sec.layout === 'vertical' ? 'stacked' : 'side by side');
       }
     });
 

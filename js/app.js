@@ -4,14 +4,16 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
+  // Plain-English examples. Each is real parser input — clicking one fills the
+  // box with exactly this text, so what you see is what gets parsed.
   var EXAMPLES = [
+    'addition within 20',
     'subtraction within 20',
-    '2-digit addition within 100 without carry',
-    '3 digit vertical subtraction',
-    'multiplication tables to 12',
-    'division within 144',
-    'grade 2',
-    'level C',
+    '2-digit addition without carrying',
+    '3-digit subtraction, stacked',
+    'times tables to 12',
+    'division within 100',
+    'grade 3',
     '1 page of one-digit subtraction within 20; then 5 pages of 2-digit minus 1-digit; then 5 pages of mixed'
   ];
 
@@ -37,7 +39,8 @@
       var strong = document.createElement('strong');
       strong.textContent = sec.pages + (sec.pages === 1 ? ' page' : ' pages');
       li.appendChild(strong);
-      li.appendChild(document.createTextNode(' × ' + sec.perPage + ' — ' + sec.label));
+      li.appendChild(document.createTextNode(
+        ' of ' + sec.perPage + ' problems — ' + sec.label));
       list.appendChild(li);
     });
 
@@ -108,7 +111,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip';
-      b.textContent = ex.length > 46 ? ex.slice(0, 44) + '…' : ex;
+      b.textContent = ex.length > 34 ? ex.slice(0, 32) + '…' : ex;
       b.title = ex;
       b.addEventListener('click', function () {
         $('spec').value = ex;
