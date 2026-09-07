@@ -87,17 +87,16 @@
 
     showUnderstood(parsed.sections, messages);
     EM.render.render(worksheet, $('sheet'));
-    $('seed').value = worksheet.seed;
     $('show-answers').checked = false;
     $('total-score').textContent = '';
     document.querySelector('.sheet-wrap').scrollIntoView({ block: 'start' });
   }
 
-  function run(newSeed) {
+  // Always a fresh seed: every run produces a new set of problems.
+  function run() {
     var spec = $('spec').value.trim() || DEFAULT_SPEC;
     $('spec').value = spec;
-    var seed = newSeed ? EM.rng.newSeed() : ($('seed').value.trim() || EM.rng.newSeed());
-    generate(spec, seed);
+    generate(spec, EM.rng.newSeed());
   }
 
   // ---- events --------------------------------------------------------------
@@ -112,16 +111,15 @@
       b.title = ex;
       b.addEventListener('click', function () {
         $('spec').value = ex;
-        run(true);
+        run();
       });
       chips.appendChild(b);
     });
 
-    $('generate').addEventListener('click', function () { run(false); });
-    $('reroll').addEventListener('click', function () { run(true); });
+    $('generate').addEventListener('click', function () { run(); });
 
     $('spec').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); run(false); }
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); run(); }
     });
 
     $('sheet').addEventListener('click', function (e) {
@@ -186,9 +184,6 @@
       window.print();
     });
 
-    $('seed').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); run(false); }
-    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {

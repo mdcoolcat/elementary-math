@@ -16,8 +16,10 @@ python3 -m http.server 8000    # then http://localhost:8000
 
 ## Describing a worksheet
 
-Type what you want in the box. The panel echoes back what it understood, so you
-can see whether the parser read you correctly before you print anything.
+Type what you want in the box and hit **Generate**. Every click produces a fresh
+set of problems from the same description, so click again for the next day's
+practice. The panel echoes back what it understood, so you can see whether the
+parser read you correctly before you print anything.
 
 | You type | You get |
 | --- | --- |
@@ -60,6 +62,9 @@ already listed, not a mix of operations.
 - **Show answer key** fills in the answers; unticking it puts your own back.
 - Editing an answer clears its mark, so you can retry and re-check.
 
+Nothing is saved: **Generate** and a page reload both discard the answers on
+screen.
+
 ## Exporting a PDF
 
 **Export PDF** opens the browser print dialog — choose *Save as PDF*, Letter,
@@ -73,20 +78,13 @@ at how many digits the answer has.
 Tick **Include answers in the PDF** to print the filled sheet (combine with
 *Show answer key* to print an answer key).
 
-## Reproducibility
-
-Every worksheet is generated from a seed, shown in the panel. The same seed and
-the same spec always produce the same problems — useful for handing the same
-sheet to two children, or reprinting one you lost. **New problems** rolls a new
-seed; **Generate** keeps the one in the box.
-
 ## Layout of the code
 
 | File | What it does |
 | --- | --- |
 | `index.html` | Panel + sheet markup |
 | `styles.css` | Screen styling and the `@media print` worksheet layout |
-| `js/rng.js` | Seeded RNG (mulberry32) so a seed reproduces a worksheet |
+| `js/rng.js` | Seeded RNG (mulberry32); each run draws a fresh seed |
 | `js/parser.js` | Free text → section configs; grade presets; the "what I understood" labels |
 | `js/generator.js` | Section configs → problems, honouring digit widths, ceilings and carry/borrow rules |
 | `js/render.js` | Problems → pages of DOM; grading |
