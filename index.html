@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementary Math — Worksheet Generator</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9E%96%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<div class="app">
+  <aside class="panel" id="panel">
+    <h1 class="brand"><span class="brand-mark">÷</span> Elementary Math</h1>
+    <p class="tagline">Kumon-style practice worksheets. Describe what you want, answer on screen, print as PDF.</p>
+
+    <label class="field-label" for="spec">What should this worksheet practise?</label>
+    <textarea id="spec" rows="4" spellcheck="false"
+      placeholder="subtraction within 20&#10;2-digit addition within 100 without carry&#10;3 digit vertical subtraction"></textarea>
+
+    <div class="chips" id="chips" aria-label="Examples"></div>
+
+    <div class="row">
+      <button id="generate" class="primary" type="button">Generate</button>
+      <button id="reroll" class="ghost" type="button" title="Same spec, new problems">New problems</button>
+    </div>
+
+    <div class="seed-row">
+      <label for="seed">Seed</label>
+      <input id="seed" type="text" spellcheck="false" autocomplete="off">
+      <span class="hint">same seed → same worksheet</span>
+    </div>
+
+    <div class="understood" id="understood" hidden>
+      <h2>What I understood</h2>
+      <ul id="understood-list"></ul>
+      <p class="warn" id="warnings" hidden></p>
+    </div>
+
+    <div class="panel-section">
+      <h2>Working</h2>
+      <div class="row wrap">
+        <button id="check-all" class="ghost" type="button">Check all pages</button>
+        <button id="reset" class="ghost" type="button">Clear answers</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="show-answers"> Show answer key</label>
+      <p class="total" id="total-score"></p>
+    </div>
+
+    <div class="panel-section">
+      <h2>Export</h2>
+      <label class="toggle"><input type="checkbox" id="print-answers"> Include answers in the PDF</label>
+      <button id="export" class="primary wide" type="button">Export PDF</button>
+      <p class="hint">Opens your browser's print dialog — choose <em>Save as PDF</em>, Letter, no scaling.</p>
+    </div>
+  </aside>
+
+  <main class="sheet-wrap">
+    <div class="sheet" id="sheet"></div>
+  </main>
+</div>
+
+<script src="js/rng.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/generator.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
