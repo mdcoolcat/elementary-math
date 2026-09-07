@@ -28,7 +28,8 @@ parser read you correctly before you print anything.
 | `3 digit vertical subtraction` | stacked column format, 5 × 4 to a page |
 | `multiplication tables to 12` | both factors 1–12 |
 | `division within 144` | exact division, no remainders |
-| `grade 2` | a preset multi-page packet for that grade (K–5 available) |
+| `grade 2` | a preset packet for that grade, via the Kumon level it maps to |
+| `level C` | a preset packet for that Kumon level directly |
 
 Phrases the parser understands:
 
@@ -38,6 +39,35 @@ Phrases the parser understands:
 - **Regrouping** — `without carry`, `no borrowing`, `with regrouping`
 - **Layout** — `vertical` / `column` / `stacked`, or `horizontal`
 - **Amount** — `5 pages`, `15 questions`
+
+### Grade and Kumon level presets
+
+`grade 3`, `3rd grade`, `level C` and `kumon c` all expand to a spec string,
+which is then parsed exactly as if you had typed it — there is no separate
+code path for presets, and the panel shows you the expansion.
+
+The levels follow the Kumon math progression:
+
+| Level | Grade | What it drills | What the generator makes |
+| --- | --- | --- | --- |
+| 3A | — | +1, +2, +3 | one-digit addition within 10 *(approximation)* |
+| 2A | K | adding 4 through 10 | addition within 20 *(approximation)* |
+| A | 1 | horizontal addition with larger numbers, then subtraction | add within 20, 2-digit + 1-digit within 100, sub within 20 |
+| B | 2 | vertical addition and subtraction, carrying and borrowing | 2-digit vertical add with carrying, 3-digit vertical add and sub |
+| C | 3 | multiplication tables, 4-digit × 1-digit, division by one digit | tables to 9, 4-digit × 1-digit vertical, 3-digit ÷ 1-digit |
+| D | 4 | double-digit multiplication, long division | 2-digit × 2-digit vertical, 3-digit ÷ 2-digit |
+| E | 5 | **fractions** | not generatable — falls back to 3-digit × 2-digit and 4-digit ÷ 2-digit |
+| F | 6 | **fractions, decimals, order of operations** | not generatable — falls back to 4-digit × 2-digit and 4-digit ÷ 2-digit |
+
+Caveats, stated plainly:
+
+- Kumon is ability-based and students commonly work above their school grade, so
+  the grade column is the nominal alignment, not a promise about any child.
+- Levels 7A–4A are counting and number writing, so asking for them starts you at 3A.
+- Levels E and F onward are fractions and decimals, which this generator cannot
+  produce. It says so in the panel and gives you multi-digit arithmetic instead.
+- Long division is not laid out in long-division form; division always prints
+  horizontally.
 
 ### Multi-section packets
 
@@ -85,9 +115,9 @@ Tick **Include answers in the PDF** to print the filled sheet (combine with
 | `index.html` | Panel + sheet markup |
 | `styles.css` | Screen styling and the `@media print` worksheet layout |
 | `js/rng.js` | Seeded RNG (mulberry32); each run draws a fresh seed |
-| `js/parser.js` | Free text → section configs; grade presets; the "what I understood" labels |
+| `js/parser.js` | Free text → section configs; Kumon level and grade presets; the "what I understood" labels |
 | `js/generator.js` | Section configs → problems, honouring digit widths, ceilings and carry/borrow rules |
-| `js/render.js` | Problems → pages of DOM; grading |
+| `js/render.js` | Problems → pages of DOM; column fitting; grading |
 | `js/app.js` | Panel wiring |
 
 The scripts load as plain globals under `window.EM`, deliberately: it keeps

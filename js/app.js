@@ -11,6 +11,7 @@
     'multiplication tables to 12',
     'division within 144',
     'grade 2',
+    'level C',
     '1 page of one-digit subtraction within 20; then 5 pages of 2-digit minus 1-digit; then 5 pages of mixed'
   ];
 

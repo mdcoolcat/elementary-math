@@ -130,7 +130,7 @@ button.wide { width: 100%; margin-top: 8px; }
 .total:empty { display: none; }
 
 /* ------------------------------------------------------------------- sheet */
-.sheet-wrap { flex: 1; padding: 26px 20px 60px; display: flex; justify-content: center; }
+.sheet-wrap { flex: 1; min-width: 0; padding: 26px 20px 60px; display: flex; justify-content: center; overflow-x: auto; }
 .sheet { display: flex; flex-direction: column; gap: 26px; }
 
 .page {
@@ -240,7 +240,8 @@ input.ans:focus {
 }
 .problem.v .pnum { width: auto; padding-top: 6px; }
 .vstack { font-size: 21px; font-variant-numeric: tabular-nums; }
-.vrow { text-align: right; min-width: 3.6em; padding: 0 2px; line-height: 1.25; }
+/* Track the answer-box width so the rule spans the whole stack. */
+.vrow { text-align: right; min-width: calc(var(--w, 3.6ch) + 1.15em); padding: 0 2px; line-height: 1.25; }
 .vrow.bot { display: flex; justify-content: space-between; gap: 0.5em; }
 .vsign { color: var(--ink-soft); }
 .vrule { border-top: 1.6px solid var(--ink); margin-top: 2px; }

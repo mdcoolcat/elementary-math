@@ -21,15 +21,61 @@
   var OP_LABEL = { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division' };
   var OP_SIGN = { add: '+', sub: '−', mul: '×', div: '÷' };
 
-  // ---- grade presets -------------------------------------------------------
-  // Each is a spec string re-fed through the parser, so grades stay in one language.
-  var GRADES = {
-    k: '1 page of addition within 10; 1 page of subtraction within 10',
-    '1': '1 page of one-digit addition within 20; 2 pages of addition within 20; 2 pages of subtraction within 20',
-    '2': '2 pages of 2-digit addition within 100 without carry; 2 pages of 2-digit addition within 100; 2 pages of 2-digit vertical subtraction within 100',
-    '3': '2 pages of multiplication tables to 10; 2 pages of 3-digit vertical addition; 2 pages of 3-digit vertical subtraction',
-    '4': '2 pages of 2-digit multiplication; 2 pages of division within 144; 2 pages of 3-digit vertical subtraction',
-    '5': '2 pages of 3-digit multiplication; 2 pages of division within 1000; 2 pages of 4-digit vertical addition'
+  // ---- Kumon level presets -------------------------------------------------
+  // Modelled on the Kumon math progression: 7A-4A are counting and number
+  // writing (nothing this generator can draw), 3A starts +1/+2/+3, 2A is adding
+  // 4 through 10, A is horizontal addition with larger numbers then subtraction,
+  // B is vertical addition and subtraction with carrying and borrowing, C is the
+  // multiplication tables then 4-digit x 1-digit then simple division by one
+  // digit, D is 2-digit x 2-digit then long division. E and F move on to
+  // fractions and decimals, which this generator cannot produce.
+  //
+  // Each preset is a spec string re-fed through the parser, so levels are
+  // written in the same language a user types.
+  var LEVELS = {
+    '3a': {
+      title: 'Level 3A — adding small numbers',
+      spec: '6 pages of one-digit addition within 10',
+      note: 'Level 3A is really "+1, +2, +3"; this approximates it as one-digit addition within 10.'
+    },
+    '2a': {
+      title: 'Level 2A — adding up to 10',
+      spec: '3 pages of one-digit addition within 20; 3 pages of addition within 20',
+      note: 'Level 2A is really "adding 4 through 10"; this approximates it as addition within 20.'
+    },
+    'a': {
+      title: 'Level A — horizontal addition and subtraction',
+      spec: '2 pages of addition within 20; 2 pages of 2-digit by 1-digit addition within 100; 2 pages of subtraction within 20'
+    },
+    'b': {
+      title: 'Level B — vertical addition and subtraction, carrying and borrowing',
+      spec: '2 pages of 2-digit vertical addition within 100 with carrying; 2 pages of 3-digit vertical addition; 2 pages of 3-digit vertical subtraction'
+    },
+    'c': {
+      title: 'Level C — multiplication tables, then division by one digit',
+      spec: '2 pages of multiplication tables to 9; 2 pages of 4-digit by 1-digit vertical multiplication; 2 pages of 3-digit by 1-digit division'
+    },
+    'd': {
+      title: 'Level D — double-digit multiplication and long division',
+      spec: '3 pages of 2-digit by 2-digit vertical multiplication; 3 pages of 3-digit by 2-digit division',
+      note: 'Level D also introduces fractions, and its division is taught in long-division form. Neither is generated here.'
+    },
+    'e': {
+      title: 'Level E — (fractions)',
+      spec: '3 pages of 3-digit by 2-digit vertical multiplication; 3 pages of 4-digit by 2-digit division',
+      note: 'Kumon Level E is fractions, which this generator cannot produce. Showing multi-digit arithmetic instead.'
+    },
+    'f': {
+      title: 'Level F — (fractions, decimals, order of operations)',
+      spec: '3 pages of 4-digit by 2-digit vertical multiplication; 3 pages of 4-digit by 2-digit division',
+      note: 'Kumon Level F is fractions, decimals and order of operations, none of which this generator produces. Showing multi-digit arithmetic instead.'
+    }
+  };
+
+  // Kumon is ability-based and students usually work above their school grade,
+  // so this is the nominal alignment, not a promise about any given child.
+  var GRADE_TO_LEVEL = {
+    k: '2a', '1': 'a', '2': 'b', '3': 'c', '4': 'd', '5': 'e', '6': 'f'
   };
 
   function wordToNum(tok) {
@@ -166,6 +212,7 @@
     var ops = sec.ops && sec.ops.length ? sec.ops : [op === 'mixed' ? 'add' : op];
     if (op === 'mixed' && (!sec.ops || !sec.ops.length)) ops = ['add', 'sub'];
 
+    var explicitLayout = sec.layout != null;
     var layout = sec.layout;
     var aDigits = sec.aDigits || null;
     var bDigits = sec.bDigits || null;
@@ -179,7 +226,9 @@
     }
     if (layout === 'vertical' && ops.length === 1 && ops[0] === 'div') {
       layout = 'horizontal'; // long-division layout is out of scope
-      warnings.push('Division is laid out horizontally (long division format is not supported).');
+      if (explicitLayout) {
+        warnings.push('Division is laid out horizontally — long-division format is not supported.');
+      }
     }
 
     function rangeFor(d) {
@@ -261,15 +310,35 @@
     return bits.join(' · ');
   }
 
-  function expandGrades(text) {
-    // "grade 2" / "2nd grade" / "kindergarten" -> the preset spec string
+  // "grade 3", "3rd grade", "g3", "kindergarten", "level C", "kumon 2A".
+  function expandPreset(text, warnings) {
     var s = normalize(text);
-    var m = s.match(/\b(?:grade\s*([k1-6])|([1-6])(?:st|nd|rd|th)\s*grade|kindergarten|\bg([1-6])\b)\b/);
-    if (!m) return null;
-    var key = m[1] || m[2] || m[3] || 'k';
-    if (/kindergarten/.test(m[0])) key = 'k';
-    key = String(key).toLowerCase();
-    return GRADES[key] ? { key: key, spec: GRADES[key] } : null;
+
+    var lm = s.match(/\b(?:kumon\s*level|level|kumon)\s*([1-7]?\s*a|[b-o])\b/);
+    if (lm) {
+      var lkey = lm[1].replace(/\s+/g, '');
+      if (LEVELS[lkey]) return { key: lkey, level: LEVELS[lkey] };
+      if (/^[1-7]a$/.test(lkey)) {
+        warnings.push('Kumon Level ' + lkey.toUpperCase() +
+          ' is counting and number writing, not arithmetic — starting at Level 3A instead.');
+        return { key: '3a', level: LEVELS['3a'] };
+      }
+      warnings.push('Kumon Level ' + lkey.toUpperCase() +
+        ' is beyond arithmetic (fractions, algebra and up) — showing Level F arithmetic instead.');
+      return { key: 'f', level: LEVELS['f'] };
+    }
+
+    var gm = s.match(/\bgrade\s*([k1-9])\b|\b([1-9])(?:st|nd|rd|th)\s*grade\b|\bkindergarten\b|\bg([k1-9])\b/);
+    if (!gm) return null;
+    var gkey = /kindergarten/.test(gm[0]) ? 'k' : String(gm[1] || gm[2] || gm[3]).toLowerCase();
+    var level = GRADE_TO_LEVEL[gkey];
+    if (!level) {
+      warnings.push('Grade ' + gkey.toUpperCase() +
+        ' is past what this generator covers (it stops at elementary arithmetic) — showing Level F arithmetic instead.');
+      level = 'f';
+      gkey = null;
+    }
+    return { key: level, level: LEVELS[level], grade: gkey };
   }
 
   function parse(text) {
@@ -278,11 +347,18 @@
     var raw = String(text || '').trim();
     if (!raw) return { sections: [], warnings: ['Type what you want, e.g. "subtraction within 20".'], notes: notes };
 
-    var grade = expandGrades(raw);
     var body = raw;
-    if (grade && !/\bdigit|within|page|addition|subtraction|multiplication|division\b/.test(normalize(raw).replace(/grade\s*[k1-6]/, ''))) {
-      body = grade.spec;
-      notes.push('Grade ' + grade.key.toUpperCase() + ' preset: ' + grade.spec);
+    var preset = expandPreset(raw, warnings);
+    // Only treat it as a preset if the text is just the grade/level name — if
+    // they also spelled out digits or an operation, take them at their word.
+    var rest = normalize(raw)
+      .replace(/\b(?:kumon\s*level|level|kumon)\s*[1-7]?\s*[a-o]\b/, '')
+      .replace(/\bgrade\s*[k1-9]\b|\b[1-9](?:st|nd|rd|th)\s*grade\b|\bkindergarten\b|\bg[k1-9]\b/, '');
+    if (preset && !/\bdigit|within|page|addition|subtraction|multiplication|division\b/.test(rest)) {
+      body = preset.level.spec;
+      notes.push((preset.grade ? 'Grade ' + preset.grade.toUpperCase() + ' → ' : '') +
+        preset.level.title + '.');
+      if (preset.level.note) notes.push(preset.level.note);
     }
 
     var segments = splitSegments(body);
@@ -341,7 +417,8 @@
 
   EM.parser = {
     parse: parse,
-    GRADES: GRADES,
+    LEVELS: LEVELS,
+    GRADE_TO_LEVEL: GRADE_TO_LEVEL,
     OP_SIGN: OP_SIGN,
     OP_LABEL: OP_LABEL,
     describe: describe

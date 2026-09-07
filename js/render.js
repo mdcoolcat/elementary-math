@@ -95,6 +95,9 @@
     grid.style.setProperty('--cols', cols);
     grid.style.setProperty('--rows', rows);
     var width = answerWidth(page);
+    // Published on the grid as well so the vertical stacks (and their rules)
+    // can size themselves to match the answer boxes.
+    grid.style.setProperty('--w', width + 'ch');
     page.problems.forEach(function (p, i) {
       grid.appendChild(page.layout === 'vertical'
         ? verticalProblem(p, pageIndex, i, width)
@@ -113,11 +116,31 @@
     return section;
   }
 
+  // columnsFor() is a guess from the problem count; wide problems (4-digit x
+  // 2-digit multiplication) can still overrun the sheet. Measure once the page
+  // is in the document and drop a column until it fits. Skipped on narrow
+  // viewports, where the page is not at its printed width and the measurement
+  // would not describe the printed result.
+  function fitColumns(section) {
+    if (section.clientWidth < 640) return;
+    var grid = section.querySelector('.problems');
+    var count = grid.children.length;
+    var cols = parseInt(grid.style.getPropertyValue('--cols'), 10) || 1;
+    while (cols > 1 && section.scrollWidth > section.clientWidth) {
+      cols--;
+      grid.style.setProperty('--cols', cols);
+      grid.style.setProperty('--rows', Math.ceil(count / cols));
+    }
+  }
+
   function render(worksheet, mount) {
     mount.textContent = '';
-    worksheet.pages.forEach(function (page, i) {
-      mount.appendChild(renderPage(page, i, worksheet.pages.length));
+    var sections = worksheet.pages.map(function (page, i) {
+      var section = renderPage(page, i, worksheet.pages.length);
+      mount.appendChild(section);
+      return section;
     });
+    sections.forEach(fitColumns);
   }
 
   // ---- grading -------------------------------------------------------------
