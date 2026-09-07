@@ -348,6 +348,7 @@
     if (!raw) return { sections: [], warnings: ['Type what you want, e.g. "subtraction within 20".'], notes: notes };
 
     var body = raw;
+    var presetUsed = false;
     var preset = expandPreset(raw, warnings);
     // Only treat it as a preset if the text is just the grade/level name — if
     // they also spelled out digits or an operation, take them at their word.
@@ -356,6 +357,7 @@
       .replace(/\bgrade\s*[k1-9]\b|\b[1-9](?:st|nd|rd|th)\s*grade\b|\bkindergarten\b|\bg[k1-9]\b/, '');
     if (preset && !/\bdigit|within|page|addition|subtraction|multiplication|division\b/.test(rest)) {
       body = preset.level.spec;
+      presetUsed = true;
       notes.push((preset.grade ? 'Grade ' + preset.grade.toUpperCase() + ' → ' : '') +
         preset.level.title + '.');
       if (preset.level.note) notes.push(preset.level.note);
@@ -413,11 +415,53 @@
       sections = kept;
     }
 
-    return { sections: sections, warnings: warnings, notes: notes };
+    // Page counts the user typed themselves ("5 pages of...") are their explicit
+    // intent and outrank the Pages control. Counts that came out of a preset are
+    // ours, not theirs, so those stay scalable.
+    var statedPages = !presetUsed && loose.some(function (s) { return s.pages != null; });
+
+    return {
+      sections: sections,
+      warnings: warnings,
+      notes: notes,
+      statedPages: statedPages
+    };
+  }
+
+  // Resize a packet to `total` pages, keeping the relative weight of each
+  // section and giving every section at least one page. Largest-remainder
+  // allocation, so the parts always add up to exactly `total`.
+  function scalePages(sections, total, warnings) {
+    var n = sections.length;
+    if (!n) return sections;
+    total = Math.max(1, Math.min(40, total));
+
+    if (total <= n) {
+      if (warnings && total < n) {
+        warnings.push('Only the first ' + total + ' of ' + n +
+          ' sections fit in ' + total + ' page' + (total === 1 ? '' : 's') + '.');
+      }
+      return sections.slice(0, total).map(function (s) { s.pages = 1; return s; });
+    }
+
+    var weights = sections.map(function (s) { return Math.max(1, s.pages); });
+    var sum = weights.reduce(function (a, b) { return a + b; }, 0);
+    var extra = total - n;
+    var exact = weights.map(function (w) { return extra * w / sum; });
+    var base = exact.map(Math.floor);
+    var assigned = base.reduce(function (a, b) { return a + b; }, 0);
+
+    var order = exact.map(function (v, i) { return { i: i, frac: v - base[i] }; })
+      .sort(function (a, b) { return b.frac - a.frac; });
+    for (var k = 0; k < extra - assigned; k++) base[order[k % n].i]++;
+
+    sections.forEach(function (s, i) { s.pages = 1 + base[i]; });
+    return sections;
   }
 
   EM.parser = {
     parse: parse,
+    scalePages: scalePages,
     LEVELS: LEVELS,
     GRADE_TO_LEVEL: GRADE_TO_LEVEL,
     OP_SIGN: OP_SIGN,

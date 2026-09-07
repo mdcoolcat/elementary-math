@@ -21,8 +21,11 @@
     <p class="field-note">Or click an example:</p>
     <div class="chips" id="chips" aria-label="Examples"></div>
 
-    <div class="row">
-      <button id="generate" class="primary wide" type="button">Generate</button>
+    <div class="row generate-row">
+      <label class="pages-field" for="pages">Pages
+        <input id="pages" type="number" min="1" max="40" step="1" value="3">
+      </label>
+      <button id="generate" class="primary" type="button">Generate</button>
     </div>
     <p class="hint">Every click makes a fresh set of problems.</p>
 

@@ -16,7 +16,8 @@ python3 -m http.server 8000    # then http://localhost:8000
 
 ## Describing a worksheet
 
-Type what you want in the box and hit **Generate**. Every click produces a fresh
+Set **Pages** (default 3) and type what you want in the box, then hit
+**Generate**. Every click produces a fresh
 set of problems from the same description, so click again for the next day's
 practice. The panel echoes back what it understood, so you can see whether the
 parser read you correctly before you print anything — the **What you'll get**
@@ -41,6 +42,17 @@ Phrases the parser understands:
 - **Regrouping** — `without carry`, `no borrowing`, `with regrouping`
 - **Layout** — `vertical` / `column` / `stacked`, or `horizontal` / `across`
 - **Amount** — `5 pages`, `15 questions`
+
+### How many pages you get
+
+The **Pages** control sizes the whole worksheet. A one-line description gets
+that many pages; a multi-section packet (including a grade or level preset) is
+divided up in proportion, with every section getting at least one page — so
+`grade 3` at 3 pages is one page each of tables, multiplication and division,
+and at 10 pages it is 4 / 3 / 3.
+
+If you state page counts yourself (`5 pages of...`), those win and the Pages
+control is ignored — the panel says so when that happens.
 
 ### Grade and Kumon level presets
 

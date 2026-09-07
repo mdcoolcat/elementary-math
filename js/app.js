@@ -18,6 +18,7 @@
   ];
 
   var DEFAULT_SPEC = 'subtraction within 20';
+  var DEFAULT_PAGES = 3;
 
   var state = {
     spec: '',
@@ -28,7 +29,7 @@
 
   // ---- panel feedback ------------------------------------------------------
 
-  function showUnderstood(sections, messages) {
+  function showUnderstood(sections, notes, warnings) {
     var box = $('understood');
     var list = $('understood-list');
     var warn = $('warnings');
@@ -45,13 +46,21 @@
     });
 
     box.hidden = sections.length === 0;
-    if (messages.length) {
-      warn.textContent = messages.join(' ');
-      warn.hidden = false;
-      box.hidden = false;
-    } else {
-      warn.hidden = true;
-    }
+    warn.textContent = '';
+    (notes || []).forEach(function (text) {
+      var p = document.createElement('p');
+      p.className = 'note';
+      p.textContent = text;
+      warn.appendChild(p);
+    });
+    (warnings || []).forEach(function (text) {
+      var p = document.createElement('p');
+      p.className = 'warn-line';
+      p.textContent = text;
+      warn.appendChild(p);
+    });
+    warn.hidden = warn.childNodes.length === 0;
+    if (!warn.hidden) box.hidden = false;
   }
 
   function updateTotal() {
@@ -70,15 +79,38 @@
 
   // ---- generate ------------------------------------------------------------
 
+  function pageCount() {
+    var v = parseInt($('pages').value, 10);
+    if (!isFinite(v)) v = DEFAULT_PAGES;
+    v = Math.max(1, Math.min(40, v));
+    $('pages').value = v;
+    return v;
+  }
+
   function generate(spec, seed) {
     var parsed = EM.parser.parse(spec);
-    var messages = parsed.notes.concat(parsed.warnings);
+    var notes = parsed.notes.slice();
+    var messages = parsed.warnings.slice();
 
     if (!parsed.sections.length) {
-      showUnderstood([], messages);
+      showUnderstood([], notes, messages);
       $('sheet').innerHTML = '<p class="empty">Nothing to generate yet.</p>';
       state.worksheet = null;
       return;
+    }
+
+    // The Pages control sizes the packet; page counts the user typed themselves
+    // outrank it, since those are an explicit request.
+    var wanted = pageCount();
+    if (parsed.statedPages) {
+      var typed = parsed.sections.reduce(function (n, s) { return n + s.pages; }, 0);
+      if (typed !== wanted) {
+        notes.push('Using the ' + typed + ' pages your description asks for, not the Pages setting.');
+      }
+    } else {
+      // scalePages can drop trailing sections when the target is smaller than
+      // the section count, so it returns the list rather than only mutating it.
+      parsed.sections = EM.parser.scalePages(parsed.sections, wanted, messages);
     }
 
     var worksheet = EM.generator.build(parsed.sections, seed);
@@ -89,7 +121,7 @@
     state.worksheet = worksheet;
     state.savedAnswers = null;
 
-    showUnderstood(parsed.sections, messages);
+    showUnderstood(parsed.sections, notes, messages);
     EM.render.render(worksheet, $('sheet'));
     $('show-answers').checked = false;
     $('total-score').textContent = '';
@@ -186,6 +218,10 @@
     $('export').addEventListener('click', function () {
       if (!state.worksheet) return;
       window.print();
+    });
+
+    $('pages').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); run(); }
     });
 
   }
